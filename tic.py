@@ -1,4 +1,4 @@
-import os, random, pygame, time, collections
+import os, random, pygame, time
 
 pygame.init()
 winx = 600
@@ -13,27 +13,46 @@ class Agent:
     def __init__(self, symbol):
         self.symbol = symbol
     def move(self, grid):
+        
+        cellvals = []
 
-        # count = 0
-        # for row in grid:
-        #     count += row.count(None)
-
-        # minMax(count, grid)
         for row in grid:
             for cell in row:
-                print(cell.id)
+                if cell.symbol == None:
+                    cell.value = minMax(cell, grid.copy(), self.symbol, True)
+                    cellvals.append(cell.value)
 
-        while True:
-            x = random.randint(0, 2)
-            y = random.randint(0, 2)
+        maxval = max(cellvals)
+        print(maxval)
 
-            if grid[x][y].symbol == None:
-                grid[x][y].symbol = self.symbol
-                updateGrid(grid)
-                pygame.display.update()
-                return
+        for row in grid:
+            for cell in row:
+                print(str(cell.value) + '/' + str(cell.symbol) + '   ', end='')
+            print('\n')
+        print('\n')
 
+        moves = []
 
+        for row in grid:
+            for cell in row:
+                if cell.value == maxval and cell.symbol == None:
+
+                    moves.append(cell.id)
+
+        move = random.randint(0, len(moves) - 1)
+
+        for row in grid:
+            for cell in row:
+                if cell.id == moves[move]:
+                    cell.symbol = self.symbol
+                    updateGrid(grid)
+                    pygame.display.update()
+
+                    for a in grid:
+                        for b in a:
+                            b.value = None
+
+                    return
 
 class Player:
     def __init__(self, symbol):
@@ -43,23 +62,56 @@ class Cell:
     def __init__(self, id):
         self.id = id
         self.symbol = None
+        self.value = None
     def assign(self, symbol):
         self.symbol = symbol
 
-# def minMax(count, grid):
+def minMax(node, mgrid, symbol, isMaxing):
 
-#     if count == 0:
-#         return
+    for row in mgrid:
+        for cell in row:
+            if cell.id == node.id:
+                if isMaxing:
+                    cell.symbol = symbol
+                else: 
+                    if symbol == 'X':
+                        cell.symbol = 'O'
+                    else:
+                        cell.symbol = 'X'
+
+                win, stat = checkWinner(mgrid)
+                # print(str(win) + ' ' + str(stat))
+
+                if stat == 'end':
+                    if win == 'Tie':
+                        cell.symbol = None
+                        return 0
+                    elif win == symbol:
+                        cell.symbol = None
+                        return 1
+                    else:
+                        cell.symbol = None
+                        return -1
+
+                if isMaxing:
+                    value = 999
+
+                    for arow in mgrid:
+                        for acell in arow:
+                            if acell.symbol == None:
+                                value = min(value, minMax(acell, mgrid, symbol, False))
+                    cell.symbol = None
+                    return value
+                else:
+                    value = -999
+
+                    for arow in mgrid:
+                        for acell in arow:
+                            if acell.symbol == None:
+                                value = max(value, minMax(acell, mgrid, symbol, True))
+                    cell.symbol = None
+                    return value
     
-#     mmgrid = grid.copy()
-
-#     for row in mmgrid:
-#         for cell in row:
-#             if cell == None:
-#                 minMax(count - 1, mmgrid)
-    
-                
-
 def drawGrid():
     screen.fill((0, 0, 0))
     pygame.draw.rect(screen, (255, 255, 255), (195, 15, 15, 570), 0)
@@ -92,7 +144,6 @@ def printWinner(winner):
 
     writeOnScreen('Play as "X"', 35, -100, 20)
     writeOnScreen('Play as "O"', 35, 100, 20)
-
 
 def writeOnScreen(txt, size, offsetX, offsetY):
     font = pygame.font.SysFont("Arial", size)
