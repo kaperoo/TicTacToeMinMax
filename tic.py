@@ -1,5 +1,6 @@
-import os, random, pygame, time
+import random, pygame, time
 
+#   Initialise pygame, window and window variables
 pygame.init()
 winx = 600
 winy = 600
@@ -9,13 +10,17 @@ gameSurface = pygame.Surface((winx, winy))
 gameSurface.set_colorkey((0, 0, 0))
 gameSurface.set_alpha(128)
 
+#   Computer controlled player 
 class Agent:
     def __init__(self, symbol):
         self.symbol = symbol
+
+    #   Plays the best possible move for computer
     def move(self, grid):
         
         cellvals = []
 
+        #   Append each free cell a value based on MinMax algorithm
         for row in grid:
             for cell in row:
                 if cell.symbol == None:
@@ -23,24 +28,26 @@ class Agent:
                     cellvals.append(cell.value)
 
         maxval = max(cellvals)
-        print(maxval)
+        # print(maxval)
 
-        for row in grid:
-            for cell in row:
-                print(str(cell.value) + '/' + str(cell.symbol) + '   ', end='')
-            print('\n')
-        print('\n')
+        # for row in grid:
+        #     for cell in row:
+        #         print(str(cell.value) + '/' + str(cell.symbol) + '   ', end='')
+        #     print('\n')
+        # print('\n')
 
         moves = []
 
+        #   Make a List of all possible best moves
         for row in grid:
             for cell in row:
                 if cell.value == maxval and cell.symbol == None:
-
                     moves.append(cell.id)
 
+        #   Take a random move from that list
         move = random.randint(0, len(moves) - 1)
 
+        #   Play the move and update the display
         for row in grid:
             for cell in row:
                 if cell.id == moves[move]:
@@ -48,16 +55,20 @@ class Agent:
                     updateGrid(grid)
                     pygame.display.update()
 
+                    #   Strip all cells from their values
                     for a in grid:
                         for b in a:
                             b.value = None
 
                     return
 
+#   Honestly, completely useless class. But looks better than just variable 
 class Player:
     def __init__(self, symbol):
         self.symbol = symbol
 
+#   TODO: Standardize cell symbol assignment
+#   Class to represent each cell in TicTacToe grid
 class Cell:
     def __init__(self, id):
         self.id = id
@@ -66,11 +77,16 @@ class Cell:
     def assign(self, symbol):
         self.symbol = symbol
 
+#   Algorithm to find the best possible move
+#   Returns -1, 0 or 1 depending on the quality of the move
 def minMax(node, mgrid, symbol, isMaxing):
 
+    #   Find the given cell on the grid
     for row in mgrid:
         for cell in row:
             if cell.id == node.id:
+
+                #   Determine whose turn it is on that move
                 if isMaxing:
                     cell.symbol = symbol
                 else: 
@@ -82,6 +98,7 @@ def minMax(node, mgrid, symbol, isMaxing):
                 win, stat = checkWinner(mgrid)
                 # print(str(win) + ' ' + str(stat))
 
+                #   Return values based on the winner
                 if stat == 'end':
                     if win == 'Tie':
                         cell.symbol = None
@@ -102,6 +119,7 @@ def minMax(node, mgrid, symbol, isMaxing):
                                 value = min(value, minMax(acell, mgrid, symbol, False))
                     cell.symbol = None
                     return value
+                    
                 else:
                     value = -999
 
